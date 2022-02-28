@@ -1,25 +1,40 @@
-import QuoteList from '../components/quotes/QuoteList'
+import { useEffect } from "react";
 
-const DUMMY_QUOTES = [
-  {
-    id: "q1",
-    author: "Carol Burnett",
-    text: "When you have a dream, you’ve got to grab it and never let go.",
-  },
-  {
-    id: "q2",
-    author: "Audrey Hepburn",
-    text: "Nothing is impossible. The word itself says ‘I’m possible!'",
-  },
-  {
-    id: "q3",
-    author: "Alexander the Great",
-    text: "There is nothing impossible to they who will try.",
-  },
-];
+import LoadingSpinner from "../components/UI/LoadingSpinner";
+import NoQuotesFound from "../components/quotes/NoQuotesFound";
+import QuoteList from "../components/quotes/QuoteList";
+import useHttp from "../hooks/use-http";
+import { getAllQuotes } from "../lib/api";
 
 const AllQuotes = () => {
-  return <QuoteList quotes={DUMMY_QUOTES} />;
+  const {
+    sendRequest,
+    status,
+    data: loadedQuotes,
+    error,
+  } = useHttp(getAllQuotes, true);
+
+  useEffect(() => {
+    sendRequest();
+  }, [sendRequest]);
+
+  if (status === "pending") {
+    return (
+      <div className="centered">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <p className="centered focused">{error}</p>;
+  }
+
+  if (status === "completed" && (!loadedQuotes || loadedQuotes.length === 0)) {
+    return <NoQuotesFound />;
+  }
+
+  return <QuoteList quotes={loadedQuotes} />;
 };
 
 export default AllQuotes;
